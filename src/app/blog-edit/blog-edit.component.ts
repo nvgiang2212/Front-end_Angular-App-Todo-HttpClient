@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { PostService } from '../post.service';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { IPost } from '../post';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PostService } from '../post.service';
 
 @Component({
   selector: 'app-blog-edit',
@@ -10,41 +11,47 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class BlogEditComponent implements OnInit {
 
-  postList: IPost[] = [];
+  post: IPost;
   postForm: FormGroup;
   constructor(
+    private route: ActivatedRoute,
     private postService: PostService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.postForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(10)]],
-      body: ['', [Validators.required, Validators.minLength(10)]],
+      body: ['', [Validators.required, Validators.minLength(10)]]
     });
-    this.postService
-      .getPosts()
-      .subscribe(next => (this.postList = next), error => (this.postList = []));
+    const id = +this.route.snapshot.paramMap.get('id');
+    this.postService.getPostById(id).subscribe(
+      next => {
+        this.post = next;
+        this.postForm.patchValue(this.post);
+      },
+      error => {
+        console.log(error);
+        this.post = null;
+      }
+    );
   }
 
   onSubmit() {
     if (this.postForm.valid) {
-      const {value} = this.postForm;
-      this.postService.createPost(value)
-        .subscribe(next => {
-          this.postList.unshift(next);
-          this.postForm.reset({
-            title: '',
-            body: ''
-          });
-        }, error => console.log(error));
+      const { value } = this.postForm;
+      const data = {
+        ...this.post,
+        ...value
+      };
+      this.postService.updatePost(data).subscribe(
+        next => {
+          this.router.navigate(['/blog']);
+        },
+        error => console.log(error)
+      );
     }
   }
 
-  deletePost(i) {
-    const post = this.postList[i];
-    this.postService.deletePost(post.id).subscribe(() => {
-      this.postList = this.postList.filter(t => t.id !== post.id);
-    });
-  }
 }

@@ -1,5 +1,3 @@
-<h2>Simple Blog</h2>
-
 <form [formGroup]="postForm" (ngSubmit)="onSubmit()">
   <div>
     <label>
@@ -23,16 +21,3 @@
   </div>
   <button type="submit">Submit</button>
 </form>
-
-<ul>
-  <li *ngFor="let post of postList; index as i">
-    <h3>
-      <a [routerLink]="['/blog', post.id]">
-        Post Id: {{post.id}} - {{post.title}}
-      </a>
-    </h3>
-    <a [routerLink]="['/blog', post.id, 'edit']">Edit</a>
-
-    <button (click)="deletePost(i)">Delete</button>
-  </li>
-</ul>
